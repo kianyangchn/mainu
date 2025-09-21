@@ -1,0 +1,124 @@
+
+Product Requirements Document: "mainu" (V1)
+Version: 1.0 (Optimized)
+Date: September 16, 2025
+Status: Final Draft
+Version
+Date
+Author
+Changes
+0.1 (Draft)
+October 26, 2023
+[Original Author]
+Initial draft
+1.0 (Final)
+September 16, 2025
+[Senior PM Name]
+Restructured for clarity, added Executive Summary, Persona, Risks, and refined OKRs.
+
+
+0. Executive Summary
+International travel is often marred by a simple yet profound friction point: the foreign language menu. This friction, which we term 'Menu Anxiety', leads to poor dining experiences, ordering mistakes, and lost opportunities for cultural immersion. mainu is a mobile application designed to eliminate this anxiety. By leveraging advanced OCR, AI-powered contextual translation, and a seamless sharing interface, our V1 product will transform a confusing physical menu into an interactive, understandable, and shareable digital experience. Our goal is to empower a single user to confidently manage the entire group ordering process, making dining abroad as easy as dining at home. This document outlines the MVP required to validate our core hypothesis and achieve product-market fit within our target segment.
+1. Vision & The Problem
+Vision: To make dining anywhere in the world a universally accessible and enjoyable experience, free from language barriers.
+Problem Statement: "Menu Anxiety"
+For international travelers, especially in a group, a foreign menu is more than just text—it's a barrier. The designated "order-taker" faces a chaotic and stressful process:
+Information Overload: Juggling a physical menu, a basic translation app, and questions from the group is inefficient and frustrating.
+Lack of Context: Simple word-for-word translation fails. It doesn't explain what a "Cacio e Pepe" actually is, what ingredients are in "Tom Yum Goong," or what the dish looks like.
+Social Friction: Passing a single menu around a table is slow. The process stalls as each person individually tries to decipher the options, leading to a disjointed and often tense group dynamic.
+Communication Errors: Mispronouncing a dish or pointing vaguely can lead to incorrect orders, creating awkwardness with waitstaff and disappointment when the food arrives.
+2. Strategic Goals & Success Metrics (V1 OKRs)
+Objective: Validate that we can solve the core "Menu Anxiety" problem for group travelers and establish a foundation for future growth.
+Key Result
+Measurement
+KR1: Achieve strong initial market adoption.
+Attain 10,000 Monthly Active Users (MAU) by end of Q1 2024.
+KR2: Deliver a reliable and fast core user experience.
+90% of menus scanned are successfully processed within 60 seconds.
+KR3: Create a "magical" product that users love and recommend.
+Maintain an average App Store / Play Store rating of ≥ 4.5.
+KR4: Demonstrate product stickiness and validate the group-use case.
+Achieve a 7-day retention rate of 30% and an average of 1.5 shares per successfully scanned menu.
+
+3. Target Audience & Persona
+Our primary target is the "Group Planner." This individual is technologically adept and naturally takes charge of logistics during travel.
+Persona: Alex, the Planner (32)
+Bio: Alex is planning a two-week trip to Italy with their partner and another couple. Alex is the one who books the flights, researches hotels, and finds interesting restaurants.
+Goals: Wants the trip to be smooth and enjoyable for everyone. Wants to experience authentic local culture, especially the food. Hates feeling like an unprepared tourist.
+Frustrations: The stress of being the single point of contact for decisions. The fear of ordering a "bad" or incorrect meal for the group and ruining an evening. Wasting time trying to get everyone on the same page.
+4. V1 Scope: The Minimum Viable Product (MVP)
+The V1 is laser-focused on the core loop: Scan -> Understand -> Share -> Decide -> Order.
+Feature
+User Story (As Alex, the Planner...)
+Why (Strategic Rationale)
+1. Multi-Page Menu Capture
+"...I want to quickly photograph all pages of our menu so the app has all the information it needs."
+Menus are rarely single pages. Stitching is a non-negotiable part of a complete solution.
+2. AI Menu Processing
+"...I want the app to automatically identify, translate, and describe each dish with a picture."
+This is our core value proposition. It moves beyond basic translation to provide true understanding.
+3. Interactive Digital Menu
+"...I want a clean, organized digital menu with sections so I can easily find the appetizers or mains."
+A standardized UI (as detailed in Section 8) is critical for reducing cognitive load and providing a consistent experience.
+4. One-Tap Group Sharing
+"...I want to share a simple link with my group so they can browse the menu on their own phones."
+Solves the "pass the phone" problem. Empowers the group while keeping the Planner in control. A key driver for virality.
+5. Group Order Cart
+"...I want to tap on items to add them to a single cart so I can keep track of everyone's choices."
+Centralizes the final order, reducing mental overhead and preventing forgotten items.
+6. Final Order Summary
+"...I want a final list of our order, with original names and quantities, to show the waiter."
+Eliminates communication errors at the final, most critical step. Ensures what was chosen is what is ordered.
+
+5. Future Roadmap (Out-of-Scope for V1)
+To maintain focus, the following will be explicitly excluded from V1 but are key candidates for future releases. This roadmap is not a commitment but an indicator of strategic direction.
+V1.x (Fast Follows):
+Offline Mode: Caching processed menus for low-connectivity environments.
+Dietary Filters: AI-powered flagging for common restrictions (Vegetarian, Gluten-Free). Critical for broadening appeal.
+V2.0 (Expanding the Experience):
+Waitstaff Communication Tools: Pre-set translated phrases for common requests ("Check, please," "Another bottle of water").
+Bill Splitting & Payment: Integration with payment platforms to solve the next major dining pain point.
+Reviews & Recommendations: User-generated tips and dish ratings within a specific menu.
+6. User Experience & Design Principles
+Our design will be guided by three core principles:
+Clarity over Authenticity: The digital menu's primary job is to be understandable. We will use a standardized, clean, two-layer UI (Sections -> Dishes) for all menus, even if the original physical menu was unstructured. Consistency is key.
+Effortless & Fast: From app launch to a usable menu should feel magical, not tedious. The user flow must be optimized for speed, with clear loading states and minimal taps required.
+Empower the Planner: The UI/UX should always give the main user (the Planner) control over the process, from capturing the menu to creating the final order list. Shared menus are read-only to avoid chaos.
+7. Technical Architecture & Requirements
+Category
+Requirement
+Platform
+Native iOS and Android applications to ensure optimal performance and camera integration.
+Core Engine
+A backend service that orchestrates: <br> 1. A high-accuracy OCR service (e.g., Google Vision API) for text extraction. <br> 2. An LLM API (e.g., Gemini API) for translation, description generation, and section/tag identification. <br> 3. An Image Search API for sourcing dish photos.
+Data Structure
+The backend will process raw OCR data and output a standardized JSON "template" file. This decouples the AI processing from the front-end rendering, allowing for independent iteration and ensuring a consistent UX.
+Sharing
+Generate a unique, short-lived (e.g., 24-hour) URL for each processed menu. The URL will point to a lightweight, read-only web view of the menu to avoid requiring app installation for group members.
+Non-Functional
+Performance: The P90 latency for the end-to-end menu processing (from photo upload to interactive menu display) must be under 60 seconds. <br> Scalability: Architecture must support 10,000 MAU with headroom for growth. <br> Reliability: Target 99.5% uptime for all backend services.
+
+8. Risks, Assumptions, and Dependencies
+Type
+Description
+Mitigation Strategy
+Risk
+Inaccurate AI/OCR: Low-quality photos, stylized fonts, or ambiguous dish names lead to poor translations and descriptions, eroding user trust.
+- Implement in-app guides for taking clear photos. <br>- Use multiple AI models in sequence for verification. <br>- Allow users to flag or correct a major error (data gathering for future improvement).
+Risk
+High API Costs: Heavy reliance on third-party LLM and Search APIs could lead to unsustainable operational costs as user base grows.
+- Implement intelligent caching of common dishes. <br>- Negotiate volume pricing with API providers. <br>- Explore fine-tuning smaller, more cost-effective models for specific tasks post-V1.
+Assumption
+Users will have a stable internet connection while at the restaurant.
+V1 will require a connection. We will include clear error messaging for offline scenarios. Offline functionality is a top priority for V1.x.
+Dependency
+The quality and availability of third-party APIs (Google, OpenAI, etc.) are outside of our direct control.
+- Design the architecture to be API-agnostic where possible, allowing us to swap providers if needed. <br>- Implement robust error handling and failover mechanisms.
+
+9. Release Criteria (Definition of Done for V1)
+V1 will be ready for public launch when:
+All features defined in Section 4 are implemented and pass QA testing on flagship iOS and Android devices.
+The P90 processing time is under the 60-second threshold in real-world testing scenarios.
+The end-to-end user flow is polished and free of critical bugs.
+App store listings are prepared, and a basic analytics suite is integrated to track OKRs.
+The application is stable, with a crash-free session rate of >99%.
