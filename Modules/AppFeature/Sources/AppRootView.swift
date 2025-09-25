@@ -130,7 +130,7 @@ public struct AppRootView: View {
     private enum Phase: Equatable {
         case capture
         case processing
-        case menu(MenuTemplate, recognizedText: String, backendOutput: String?)
+        case menu(MenuTemplate, recognizedText: String, backendOutput: DebugPayload?)
         case error(String)
     }
 
@@ -201,10 +201,10 @@ public struct AppRootView: View {
         }
     }
 
-    private func menuView(for template: MenuTemplate, recognizedText _: String, backendOutput: String?) -> some View {
+    private func menuView(for template: MenuTemplate, recognizedText _: String, backendOutput: DebugPayload?) -> some View {
         InteractiveMenuView(
             template: template,
-            analysisText: backendOutput,
+            debugInfo: backendOutput,
             quantityProvider: { cart.quantity(for: $0) },
             onDishTapped: { selectedDish = $0 },
             onQuickAdd: { dish in withAnimation { cart.increment(dish) } },
@@ -244,12 +244,24 @@ public struct AppRootView: View {
         let recognizedText = coordinator.concatenatedRecognizedText
 
         let debugClient = environment.menuProcessingDebugClient
+        let currentLocale = Locale.current
+        let langOut = Locale.preferredLanguages.first ?? currentLocale.identifier
+        let langIn: String = {
+            if let regionID = currentLocale.region?.identifier ?? currentLocale.regionCode {
+                return currentLocale.localizedString(forRegionCode: regionID) ?? regionID
+            }
+            return currentLocale.identifier
+        }()
 
         Task {
             async let progressTask: Void = animateProgress()
-            async let debugTask: String? = {
+            async let debugTask: DebugPayload? = {
                 guard let debugClient else { return nil }
-                return await debugClient.sendMenuText(recognizedText)
+                return await debugClient.sendMenuText(
+                    recognizedText,
+                    langIn: langIn,
+                    langOut: langOut
+                )
             }()
             do {
                 let request = MenuProcessingRequest(

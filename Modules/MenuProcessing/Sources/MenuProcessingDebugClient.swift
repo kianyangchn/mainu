@@ -16,7 +16,11 @@ public struct MenuProcessingDebugClient: Sendable {
     }
 
     @discardableResult
-    public func sendMenuText(_ text: String) async -> String? {
+    public func sendMenuText(
+        _ text: String,
+        langIn: String,
+        langOut: String
+    ) async -> DebugPayload? {
         let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedText.isEmpty else { return nil }
 
@@ -26,12 +30,13 @@ public struct MenuProcessingDebugClient: Sendable {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.timeoutInterval = 120
 
-        let payload = ProxyPayload(text: trimmedText, langOut: "zh-Hans", langIn: "en")
+        let payload = ProxyPayload(text: trimmedText, langOut: langOut, langIn: langIn)
         let encoder = JSONEncoder()
         encoder.keyEncodingStrategy = .convertToSnakeCase
 
         do {
             request.httpBody = try encoder.encode(payload)
+            logger("[MenuDebug] Calling proxy (lang_in=\(langIn), lang_out=\(langOut))")
         } catch {
             logger("[MenuDebug] Failed to encode payload: \(error)")
             return nil
@@ -54,12 +59,13 @@ public struct MenuProcessingDebugClient: Sendable {
             let proxyResponse = try decoder.decode(ProxyResponse.self, from: data)
             if let text = proxyResponse.debugTextSnippet {
                 logger("[MenuDebug] Response snippet: \(text)")
-                return text
+                return DebugPayload(langIn: langIn, langOut: langOut, text: text)
             } else {
                 let fallback = String(data: data, encoding: .utf8)?.prefix(200)
                 let fallbackString = fallback.flatMap { String($0).trimmedNonEmpty } ?? "<unreadable body>"
                 logger("[MenuDebug] Response missing expected content. Fallback: \(fallbackString)")
-                return fallbackString == "<unreadable body>" ? nil : fallbackString
+                guard fallbackString != "<unreadable body>" else { return nil }
+                return DebugPayload(langIn: langIn, langOut: langOut, text: fallbackString)
             }
         } catch {
             logger("[MenuDebug] Call failed: \(error)")
@@ -72,6 +78,18 @@ private struct ProxyPayload: Encodable {
     let text: String
     let langOut: String
     let langIn: String
+}
+
+public struct DebugPayload: Equatable, Sendable {
+    public let langIn: String
+    public let langOut: String
+    public let text: String
+
+    public init(langIn: String, langOut: String, text: String) {
+        self.langIn = langIn
+        self.langOut = langOut
+        self.text = text
+    }
 }
 
 private struct ProxyResponse: Decodable {
