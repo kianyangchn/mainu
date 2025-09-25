@@ -12,15 +12,20 @@ public struct AppEnvironment {
     public var analytics: AnalyticsTracking
     public var shareLinkGenerator: ShareLinkGenerating
     public var menuProcessingService: MenuProcessingService
+    public var menuProcessingDebugClient: MenuProcessingDebugClient?
 
     public init(
         analytics: AnalyticsTracking = NoopAnalyticsTracker(),
         shareLinkGenerator: ShareLinkGenerating = MockShareLinkGenerator(),
-        menuProcessingService: MenuProcessingService = MockMenuProcessingService()
+        menuProcessingService: MenuProcessingService = MockMenuProcessingService(),
+        menuProcessingDebugClient: MenuProcessingDebugClient? = MenuProcessingDebugClient(
+            token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJpb3MtYXBwIiwiYXVkIjoiYWktcHJveHkiLCJpc3MiOiJpc3N1ZXItaWQiLCJpYXQiOjE3NTg4MzY4NTgsImV4cCI6MTc1ODg0MDQ1OH0.jIHP9IpYShbRCVC00p94gGCXFQSQvgpFf48nIU_5ZpQ"
+        )
     ) {
         self.analytics = analytics
         self.shareLinkGenerator = shareLinkGenerator
         self.menuProcessingService = menuProcessingService
+        self.menuProcessingDebugClient = menuProcessingDebugClient
     }
 }
 
@@ -63,8 +68,8 @@ public struct AppRootView: View {
                     )
                 case .processing:
                     ProcessingStepView(progress: processingProgress)
-                case let .menu(template, recognizedText):
-                    menuView(for: template, recognizedText: recognizedText)
+                case let .menu(template, recognizedText, backendOutput):
+                    menuView(for: template, recognizedText: recognizedText, backendOutput: backendOutput)
                 case .error(let message):
                     ErrorStateView(message: message, retry: resetFlow)
                 }
@@ -125,14 +130,14 @@ public struct AppRootView: View {
     private enum Phase: Equatable {
         case capture
         case processing
-        case menu(MenuTemplate, recognizedText: String)
+        case menu(MenuTemplate, recognizedText: String, backendOutput: String?)
         case error(String)
     }
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
-            if case .menu(_, _) = phase {
+            if case .menu(_, _, _) = phase {
                 Button {
                     isConfirmingReturnToCapture = true
                 } label: {
@@ -146,7 +151,7 @@ public struct AppRootView: View {
         }
 
         ToolbarItem(placement: .topBarTrailing) {
-            if case let .menu(template, _) = phase {
+            if case let .menu(template, _, _) = phase {
                 Button {
                     Task { await generateShareLink(for: template) }
                 } label: {
@@ -158,7 +163,7 @@ public struct AppRootView: View {
         }
 
         ToolbarItem(placement: .bottomBar) {
-            if case let .menu(template, _) = phase {
+            if case let .menu(template, _, _) = phase {
                 HStack(spacing: 12) {
                     Button(action: { isPresentingSummary = true }) {
                         Label("Review Order", systemImage: "cart")
@@ -191,15 +196,15 @@ public struct AppRootView: View {
         switch phase {
         case .capture: return "Capture Menu"
         case .processing: return "Processing"
-        case .menu: return "Interactive Menu"
+        case .menu(_, _, _): return "Interactive Menu"
         case .error: return "Retry"
         }
     }
 
-    private func menuView(for template: MenuTemplate, recognizedText: String) -> some View {
+    private func menuView(for template: MenuTemplate, recognizedText _: String, backendOutput: String?) -> some View {
         InteractiveMenuView(
             template: template,
-            recognizedText: recognizedText,
+            analysisText: backendOutput,
             quantityProvider: { cart.quantity(for: $0) },
             onDishTapped: { selectedDish = $0 },
             onQuickAdd: { dish in withAnimation { cart.increment(dish) } },
@@ -238,23 +243,36 @@ public struct AppRootView: View {
 
         let recognizedText = coordinator.concatenatedRecognizedText
 
+        let debugClient = environment.menuProcessingDebugClient
+
         Task {
-            await animateProgress()
+            async let progressTask: Void = animateProgress()
+            async let debugTask: String? = {
+                guard let debugClient else { return nil }
+                return await debugClient.sendMenuText(recognizedText)
+            }()
             do {
                 let request = MenuProcessingRequest(
                     pageCount: coordinator.pageCount,
                     recognizedText: recognizedText
                 )
                 let template = try await environment.menuProcessingService.submit(request)
+                let backendOutput = await debugTask
                 await MainActor.run {
-                    phase = .menu(template, recognizedText: recognizedText)
+                    phase = .menu(
+                        template,
+                        recognizedText: recognizedText,
+                        backendOutput: backendOutput
+                    )
                     environment.analytics.track(event: .menuScanned(menuID: template.id))
                 }
             } catch {
+                _ = await debugTask
                 await MainActor.run {
                     phase = .error("Unable to process the menu right now. Please try again.")
                 }
             }
+            _ = await progressTask
         }
     }
 

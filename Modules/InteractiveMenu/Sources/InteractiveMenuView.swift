@@ -4,7 +4,7 @@ import DesignSystem
 
 public struct InteractiveMenuView: View {
     private let template: MenuTemplate
-    private let recognizedText: String?
+    private let analysisText: String?
     private let quantityProvider: (MenuDish) -> Int
     private let onDishTapped: (MenuDish) -> Void
     private let onQuickAdd: (MenuDish) -> Void
@@ -12,15 +12,15 @@ public struct InteractiveMenuView: View {
 
     public init(
         template: MenuTemplate,
-        recognizedText: String? = nil,
+        analysisText: String? = nil,
         quantityProvider: @escaping (MenuDish) -> Int = { _ in 0 },
         onDishTapped: @escaping (MenuDish) -> Void = { _ in },
         onQuickAdd: @escaping (MenuDish) -> Void = { _ in },
         onQuickRemove: @escaping (MenuDish) -> Void = { _ in }
     ) {
         self.template = template
-        let trimmedText = recognizedText?.trimmingCharacters(in: .whitespacesAndNewlines)
-        self.recognizedText = trimmedText?.isEmpty == true ? nil : trimmedText
+        let trimmedText = analysisText?.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.analysisText = trimmedText?.isEmpty == true ? nil : trimmedText
         self.quantityProvider = quantityProvider
         self.onDishTapped = onDishTapped
         self.onQuickAdd = onQuickAdd
@@ -29,9 +29,9 @@ public struct InteractiveMenuView: View {
 
     public var body: some View {
         List {
-            if let recognizedText {
-                Section("Extracted Text") {
-                    Text(recognizedText)
+            if let analysisText {
+                Section("Backend Response") {
+                    Text(analysisText)
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                         .textSelection(.enabled)
