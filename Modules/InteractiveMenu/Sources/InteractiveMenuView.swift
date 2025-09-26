@@ -100,6 +100,11 @@ private struct MenuDishRow: View {
     let quantity: Int
     let onTap: () -> Void
 
+    private var trimmedDescription: String? {
+        let value = dish.description.trimmingCharacters(in: .whitespacesAndNewlines)
+        return value.isEmpty ? nil : value
+    }
+
     var body: some View {
         Button(action: onTap) {
             HStack(alignment: .top, spacing: 12) {
@@ -111,11 +116,6 @@ private struct MenuDishRow: View {
                             .font(.headline)
                             .foregroundStyle(.primary)
                         Spacer()
-                        if let price = dish.price {
-                            Text(price)
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(.primary)
-                        }
                     }
 
                     if dish.localizedName != dish.originalName {
@@ -124,9 +124,11 @@ private struct MenuDishRow: View {
                             .foregroundStyle(.secondary)
                     }
 
-                    Text(dish.description)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                    if let summary = trimmedDescription {
+                        Text(summary)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
 
                     DishMetaView(dish: dish)
                 }

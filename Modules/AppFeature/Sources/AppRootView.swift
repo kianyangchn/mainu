@@ -14,12 +14,16 @@ public struct AppEnvironment {
     public var menuProcessingService: MenuProcessingService
     public var menuProcessingDebugClient: MenuProcessingDebugClient?
 
+    public static let defaultMenuToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJpb3MtYXBwIiwiYXVkIjoiYWktcHJveHkiLCJpc3MiOiJpc3N1ZXItaWQiLCJpYXQiOjE3NTg5MjA4NzEsImV4cCI6MTc1ODkyNDQ3MX0.til2kD9h2hceQHLYodEpmxeq_v6tLfYQxgLMY5lA-nU"
+
     public init(
         analytics: AnalyticsTracking = NoopAnalyticsTracker(),
         shareLinkGenerator: ShareLinkGenerating = MockShareLinkGenerator(),
-        menuProcessingService: MenuProcessingService = MockMenuProcessingService(),
+        menuProcessingService: MenuProcessingService = ProxyMenuProcessingService(
+            token: AppEnvironment.defaultMenuToken
+        ),
         menuProcessingDebugClient: MenuProcessingDebugClient? = MenuProcessingDebugClient(
-            token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJpb3MtYXBwIiwiYXVkIjoiYWktcHJveHkiLCJpc3MiOiJpc3N1ZXItaWQiLCJpYXQiOjE3NTg4MzY4NTgsImV4cCI6MTc1ODg0MDQ1OH0.jIHP9IpYShbRCVC00p94gGCXFQSQvgpFf48nIU_5ZpQ"
+            token: AppEnvironment.defaultMenuToken
         )
     ) {
         self.analytics = analytics
@@ -266,7 +270,9 @@ public struct AppRootView: View {
             do {
                 let request = MenuProcessingRequest(
                     pageCount: coordinator.pageCount,
-                    recognizedText: recognizedText
+                    recognizedText: recognizedText,
+                    languageIn: langIn,
+                    languageOut: langOut
                 )
                 let template = try await environment.menuProcessingService.submit(request)
                 let backendOutput = await debugTask
