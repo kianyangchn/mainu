@@ -4,11 +4,21 @@ public struct MenuProcessingRequest: Equatable, Sendable {
     public let uploadID: UUID
     public let pageCount: Int
     public let recognizedText: String
+    public let languageIn: String?
+    public let languageOut: String?
 
-    public init(uploadID: UUID = UUID(), pageCount: Int, recognizedText: String = "") {
+    public init(
+        uploadID: UUID = UUID(),
+        pageCount: Int,
+        recognizedText: String = "",
+        languageIn: String? = nil,
+        languageOut: String? = nil
+    ) {
         self.uploadID = uploadID
         self.pageCount = pageCount
         self.recognizedText = recognizedText
+        self.languageIn = languageIn
+        self.languageOut = languageOut
     }
 }
 

@@ -24,18 +24,21 @@ public struct MenuProcessingDebugClient: Sendable {
         let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedText.isEmpty else { return nil }
 
+        let encoder = JSONEncoder()
+        encoder.keyEncodingStrategy = .convertToSnakeCase
+
         var request = URLRequest(url: endpoint)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.timeoutInterval = 120
 
-        let payload = ProxyPayload(text: trimmedText, langOut: langOut, langIn: langIn)
-        let encoder = JSONEncoder()
-        encoder.keyEncodingStrategy = .convertToSnakeCase
-
         do {
-            request.httpBody = try encoder.encode(payload)
+            request.httpBody = try encoder.encode(MenuProxyPayload(
+                text: trimmedText,
+                langOut: langOut,
+                langIn: langIn
+            ))
             logger("[MenuDebug] Calling proxy (lang_in=\(langIn), lang_out=\(langOut))")
         } catch {
             logger("[MenuDebug] Failed to encode payload: \(error)")
@@ -56,8 +59,8 @@ public struct MenuProcessingDebugClient: Sendable {
             }
 
             let decoder = JSONDecoder()
-            let proxyResponse = try decoder.decode(ProxyResponse.self, from: data)
-            if let text = proxyResponse.debugTextSnippet {
+            let proxyResponse = try decoder.decode(MenuProxyResponse.self, from: data)
+            if let text = proxyResponse.debugSnippet() {
                 logger("[MenuDebug] Response snippet: \(text)")
                 return DebugPayload(langIn: langIn, langOut: langOut, text: text)
             } else {
@@ -73,13 +76,6 @@ public struct MenuProcessingDebugClient: Sendable {
         }
     }
 }
-
-private struct ProxyPayload: Encodable {
-    let text: String
-    let langOut: String
-    let langIn: String
-}
-
 public struct DebugPayload: Equatable, Sendable {
     public let langIn: String
     public let langOut: String
@@ -89,55 +85,5 @@ public struct DebugPayload: Equatable, Sendable {
         self.langIn = langIn
         self.langOut = langOut
         self.text = text
-    }
-}
-
-private struct ProxyResponse: Decodable {
-    struct Output: Decodable {
-        struct Content: Decodable {
-            let text: String?
-        }
-
-        let content: [Content]?
-
-        init(from decoder: Decoder) throws {
-            if let container = try? decoder.container(keyedBy: CodingKeys.self) {
-                content = try container.decodeIfPresent([Content].self, forKey: .content)
-            } else {
-                content = nil
-            }
-        }
-
-        private enum CodingKeys: String, CodingKey {
-            case content
-        }
-    }
-
-    let output: [Output]?
-
-    var debugTextSnippet: String? {
-        guard let outputs = output else { return nil }
-
-        // Try the requested slot first.
-        if outputs.indices.contains(1),
-           let text = outputs[1].content?.first?.text?.trimmedNonEmpty {
-            return String(text.prefix(200))
-        }
-
-        // Fallback: first non-empty text anywhere in the payload.
-        for output in outputs {
-            if let match = output.content?.compactMap({ $0.text?.trimmedNonEmpty }).first {
-                return String(match.prefix(200))
-            }
-        }
-
-        return nil
-    }
-}
-
-private extension String {
-    var trimmedNonEmpty: String? {
-        let value = trimmingCharacters(in: .whitespacesAndNewlines)
-        return value.isEmpty ? nil : value
     }
 }
