@@ -19,7 +19,7 @@ public struct AppEnvironment {
         shareLinkGenerator: ShareLinkGenerating = MockShareLinkGenerator(),
         menuProcessingService: MenuProcessingService = MockMenuProcessingService(),
         menuProcessingDebugClient: MenuProcessingDebugClient? = MenuProcessingDebugClient(
-            token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJpb3MtYXBwIiwiYXVkIjoiYWktcHJveHkiLCJpc3MiOiJpc3N1ZXItaWQiLCJpYXQiOjE3NTg4MzY4NTgsImV4cCI6MTc1ODg0MDQ1OH0.jIHP9IpYShbRCVC00p94gGCXFQSQvgpFf48nIU_5ZpQ"
+            token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJpb3MtYXBwIiwiYXVkIjoiYWktcHJveHkiLCJpc3MiOiJpc3N1ZXItaWQiLCJpYXQiOjE3NTg5MjA4NzEsImV4cCI6MTc1ODkyNDQ3MX0.til2kD9h2hceQHLYodEpmxeq_v6tLfYQxgLMY5lA-nU"
         )
     ) {
         self.analytics = analytics
