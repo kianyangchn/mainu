@@ -4,7 +4,6 @@ import DesignSystem
 
 public struct InteractiveMenuView: View {
     private let template: MenuTemplate
-    private let debugInfo: DebugPayload?
     private let quantityProvider: (MenuDish) -> Int
     private let onDishTapped: (MenuDish) -> Void
     private let onQuickAdd: (MenuDish) -> Void
@@ -12,27 +11,12 @@ public struct InteractiveMenuView: View {
 
     public init(
         template: MenuTemplate,
-        debugInfo: DebugPayload? = nil,
         quantityProvider: @escaping (MenuDish) -> Int = { _ in 0 },
         onDishTapped: @escaping (MenuDish) -> Void = { _ in },
         onQuickAdd: @escaping (MenuDish) -> Void = { _ in },
         onQuickRemove: @escaping (MenuDish) -> Void = { _ in }
     ) {
         self.template = template
-        if let debugInfo {
-            let trimmedText = debugInfo.text.trimmingCharacters(in: .whitespacesAndNewlines)
-            if trimmedText.isEmpty {
-                self.debugInfo = nil
-            } else {
-                self.debugInfo = DebugPayload(
-                    langIn: debugInfo.langIn,
-                    langOut: debugInfo.langOut,
-                    text: trimmedText
-                )
-            }
-        } else {
-            self.debugInfo = nil
-        }
         self.quantityProvider = quantityProvider
         self.onDishTapped = onDishTapped
         self.onQuickAdd = onQuickAdd
@@ -41,26 +25,6 @@ public struct InteractiveMenuView: View {
 
     public var body: some View {
         List {
-            if let debugInfo {
-                Section("Backend Response") {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("lang_in: \(debugInfo.langIn)")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        Text("lang_out: \(debugInfo.langOut)")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        Divider()
-                        Text(debugInfo.text)
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                            .textSelection(.enabled)
-                    }
-                    .padding(.vertical, 4)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            }
-
             ForEach(template.sections) { section in
                 Section(section.title) {
                     ForEach(section.dishes) { dish in
