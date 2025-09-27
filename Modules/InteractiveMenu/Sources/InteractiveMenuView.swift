@@ -59,6 +59,34 @@ public struct InteractiveMenuView: View {
     }
 }
 
+public struct InteractiveMenuLoadingView: View {
+    private let placeholderCount = 3
+
+    public init() {}
+
+    public var body: some View {
+        List {
+            Section("Preparing interactive menu") {
+                HStack(spacing: 12) {
+                    ProgressView()
+                        .progressViewStyle(.circular)
+                    Text("Translating your menu…")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.vertical, 6)
+
+                ForEach(0..<placeholderCount, id: \.self) { _ in
+                    MenuDishPlaceholderRow()
+                        .redacted(reason: .placeholder)
+                }
+            }
+        }
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+    }
+}
+
 private struct MenuDishRow: View {
     let dish: MenuDish
     let quantity: Int
@@ -115,6 +143,32 @@ private struct MenuDishRow: View {
         if dish.allergens.contains("Fish") { return "fish" }
         if dish.allergens.contains("Gluten") { return "leaf" }
         return "fork.knife"
+    }
+}
+
+private struct MenuDishPlaceholderRow: View {
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            RoundedRectangle(cornerRadius: DesignSystem.cornerRadius / 2)
+                .fill(Color.accentColor.opacity(0.1))
+                .frame(width: 52, height: 52)
+
+            VStack(alignment: .leading, spacing: 6) {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.accentColor.opacity(0.3))
+                    .frame(height: 18)
+
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.accentColor.opacity(0.2))
+                    .frame(height: 14)
+
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.accentColor.opacity(0.2))
+                    .frame(height: 14)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.vertical, 8)
     }
 }
 

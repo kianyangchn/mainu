@@ -36,7 +36,6 @@ public struct AppEnvironment {
 public struct AppRootView: View {
     @State private var coordinator = MenuCaptureCoordinator()
     @State private var phase: Phase = .capture
-    @State private var processingProgress: Double = 0
     @State private var cart = OrderCart()
     @State private var selectedDish: MenuDish?
     @State private var shareLink: MenuShareLink?
@@ -70,10 +69,10 @@ public struct AppRootView: View {
                         onAddSamplePage: addSamplePage,
                         isCameraDisabled: isCameraDisabled
                     )
-                case .processing:
-                    ProcessingStepView(progress: processingProgress)
-                case let .menu(template, recognizedText, backendOutput):
-                    menuView(for: template, recognizedText: recognizedText, backendOutput: backendOutput)
+                case .loading:
+                    InteractiveMenuLoadingView()
+                case let .menu(template, _, _):
+                    menuView(for: template)
                 case .error(let message):
                     ErrorStateView(message: message, retry: resetFlow)
                 }
@@ -133,7 +132,7 @@ public struct AppRootView: View {
 
     private enum Phase: Equatable {
         case capture
-        case processing
+        case loading(recognizedText: String)
         case menu(MenuTemplate, recognizedText: String, backendOutput: DebugPayload?)
         case error(String)
     }
@@ -141,7 +140,7 @@ public struct AppRootView: View {
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
-            if case .menu(_, _, _) = phase {
+            if isMenuPresented {
                 Button {
                     isConfirmingReturnToCapture = true
                 } label: {
@@ -199,13 +198,13 @@ public struct AppRootView: View {
     private func title(for phase: Phase) -> String {
         switch phase {
         case .capture: return "Capture Menu"
-        case .processing: return "Processing"
+        case .loading: return "Building Menu"
         case .menu(_, _, _): return "Interactive Menu"
         case .error: return "Retry"
         }
     }
 
-    private func menuView(for template: MenuTemplate, recognizedText _: String, backendOutput _: DebugPayload?) -> some View {
+    private func menuView(for template: MenuTemplate) -> some View {
         InteractiveMenuView(
             template: template,
             quantityProvider: { cart.quantity(for: $0) },
@@ -241,9 +240,6 @@ public struct AppRootView: View {
             return
         }
 
-        phase = .processing
-        processingProgress = 0
-
         let recognizedText = coordinator.concatenatedRecognizedText
 
         let debugClient = environment.menuProcessingDebugClient
@@ -256,8 +252,9 @@ public struct AppRootView: View {
             return currentLocale.identifier
         }()
 
+        phase = .loading(recognizedText: recognizedText)
+
         Task {
-            async let progressTask: Void = animateProgress()
             async let debugTask: DebugPayload? = {
                 guard let debugClient else { return nil }
                 return await debugClient.sendMenuText(
@@ -289,7 +286,6 @@ public struct AppRootView: View {
                     phase = .error("Unable to process the menu right now. Please try again.")
                 }
             }
-            _ = await progressTask
         }
     }
 
@@ -299,18 +295,8 @@ public struct AppRootView: View {
         isPresentingSummary = false
         readyOrderSummary = nil
         cart = OrderCart()
-        processingProgress = 0
         coordinator.reset()
         phase = .capture
-    }
-
-    private func animateProgress() async {
-        for step in 1...4 {
-            try? await Task.sleep(for: .milliseconds(300))
-            await MainActor.run {
-                processingProgress = Double(step) / 4.0
-            }
-        }
     }
 
     @MainActor
@@ -345,6 +331,12 @@ public struct AppRootView: View {
         components.append("Ordine:")
         components.append(contentsOf: cart.summaryLines())
         return components.joined(separator: "\n")
+    }
+
+    private var isMenuPresented: Bool {
+        if case .menu = phase { return true }
+        if case .loading = phase { return true }
+        return false
     }
 }
 
