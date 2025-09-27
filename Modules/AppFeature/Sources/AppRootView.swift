@@ -14,7 +14,7 @@ public struct AppEnvironment {
     public var menuProcessingService: MenuProcessingService
     public var menuProcessingDebugClient: MenuProcessingDebugClient?
 
-    public static let defaultMenuToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJpb3MtYXBwIiwiYXVkIjoiYWktcHJveHkiLCJpc3MiOiJpc3N1ZXItaWQiLCJpYXQiOjE3NTg5MjA4NzEsImV4cCI6MTc1ODkyNDQ3MX0.til2kD9h2hceQHLYodEpmxeq_v6tLfYQxgLMY5lA-nU"
+    public static let defaultMenuToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJpb3MtYXBwIiwiYXVkIjoiYWktcHJveHkiLCJpc3MiOiJpc3N1ZXItaWQiLCJpYXQiOjE3NTkwMDMwOTEsImV4cCI6MTc1OTAwNjY5MX0.93RGR-LeM-9XnGqMjkm2rqLsCNu00sSlibcvUSzvj1E"
 
     public init(
         analytics: AnalyticsTracking = NoopAnalyticsTracker(),
@@ -205,10 +205,9 @@ public struct AppRootView: View {
         }
     }
 
-    private func menuView(for template: MenuTemplate, recognizedText _: String, backendOutput: DebugPayload?) -> some View {
+    private func menuView(for template: MenuTemplate, recognizedText _: String, backendOutput _: DebugPayload?) -> some View {
         InteractiveMenuView(
             template: template,
-            debugInfo: backendOutput,
             quantityProvider: { cart.quantity(for: $0) },
             onDishTapped: { selectedDish = $0 },
             onQuickAdd: { dish in withAnimation { cart.increment(dish) } },
